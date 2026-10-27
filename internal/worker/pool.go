@@ -185,7 +185,11 @@ func (p *Pool) execute(ctx context.Context, job domain.Job) {
 		log.Error("record failure", "err", ferr, "job_err", err)
 		return
 	}
-	log.Warn("job failed", "err", err, "next_state", state, "elapsed", time.Since(start))
+	if state == domain.StateDead {
+		log.Error("job moved to dead-letter state", "err", err, "elapsed", time.Since(start))
+		return
+	}
+	log.Warn("job failed, will retry", "err", err, "elapsed", time.Since(start))
 }
 
 // heartbeat extends the lease until stop is closed. If the lease turns out
