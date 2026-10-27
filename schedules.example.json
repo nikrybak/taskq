@@ -7,10 +7,10 @@
     "max_attempts": 3
   },
   {
-    "name": "heartbeat-ping",
+    "name": "self-health-ping",
     "cron": "*/5 * * * *",
     "type": "send-webhook",
-    "payload": { "url": "http://localhost:9000/ping", "method": "GET" },
+    "payload": { "url": "http://localhost:8080/healthz", "method": "GET" },
     "priority": 10,
     "max_attempts": 2
   }

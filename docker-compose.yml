@@ -1,0 +1,37 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: taskq
+      POSTGRES_PASSWORD: taskq
+      POSTGRES_DB: taskq
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/create-test-db.sql:/docker-entrypoint-initdb.d/create-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U taskq -d taskq"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # Two replicas show that claiming and scheduling are safe across instances.
+  taskq:
+    build: .
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      TASKQ_DATABASE_URL: postgres://taskq:taskq@postgres:5432/taskq?sslmode=disable
+      TASKQ_HTTP_ADDR: ":8080"
+      TASKQ_SCHEDULES_FILE: /etc/taskq/schedules.json
+      TASKQ_LOG_FORMAT: text
+    deploy:
+      replicas: 2
+    ports:
+      - "8080-8081:8080"
+    stop_grace_period: 40s
+
+volumes:
+  pgdata:
