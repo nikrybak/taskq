@@ -1,0 +1,17 @@
+[
+  {
+    "name": "nightly-integrity-check",
+    "cron": "0 3 * * *",
+    "type": "checksum",
+    "payload": { "data": "nightly", "rounds": 1000000 },
+    "max_attempts": 3
+  },
+  {
+    "name": "heartbeat-ping",
+    "cron": "*/5 * * * *",
+    "type": "send-webhook",
+    "payload": { "url": "http://localhost:9000/ping", "method": "GET" },
+    "priority": 10,
+    "max_attempts": 2
+  }
+]
