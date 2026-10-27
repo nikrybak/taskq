@@ -43,3 +43,26 @@ type ValidationError struct {
 func (e *ValidationError) Error() string {
 	return e.Field + " " + e.Reason
 }
+
+// permanentError marks a failure that retrying cannot fix.
+type permanentError struct{ err error }
+
+func (e permanentError) Error() string { return e.err.Error() }
+func (e permanentError) Unwrap() error { return e.err }
+
+// Permanent wraps err so the job is moved to the dead-letter state right away
+// instead of being retried. Handlers use it for failures such as malformed
+// payloads or a 4xx response from a webhook target.
+func Permanent(err error) error {
+	if err == nil {
+		return nil
+	}
+	return permanentError{err: err}
+}
+
+// IsPermanent reports whether err, or any error it wraps, was marked with
+// Permanent.
+func IsPermanent(err error) bool {
+	var p permanentError
+	return errors.As(err, &p)
+}

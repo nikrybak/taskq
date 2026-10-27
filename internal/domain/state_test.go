@@ -3,6 +3,7 @@ package domain
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -85,5 +86,19 @@ func TestNewJobValidate(t *testing.T) {
 				t.Fatalf("expected validation error on %q, got %v", tt.field, err)
 			}
 		})
+	}
+}
+
+func TestPermanent(t *testing.T) {
+	base := errors.New("bad payload")
+	err := fmt.Errorf("handler: %w", Permanent(base))
+	if !IsPermanent(err) {
+		t.Fatal("wrapped permanent error not detected")
+	}
+	if !errors.Is(err, base) {
+		t.Fatal("permanent error must unwrap to its cause")
+	}
+	if IsPermanent(base) || Permanent(nil) != nil {
+		t.Fatal("unexpected permanent classification")
 	}
 }
